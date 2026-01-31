@@ -34,6 +34,15 @@ describe('Formatters', () => {
     it('should handle multiple names', () => {
       expect(getInitials('John Michael Doe')).toBe('JM');
     });
+
+    it('should handle names with extra spaces', () => {
+      expect(getInitials('John  Doe')).toBe('JD');
+      expect(getInitials('  John Doe  ')).toBe('JD');
+    });
+
+    it('should handle empty string', () => {
+      expect(getInitials('')).toBe('');
+    });
   });
 
   describe('truncateText', () => {

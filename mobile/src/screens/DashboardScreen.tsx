@@ -84,13 +84,13 @@ export const DashboardScreen: React.FC = () => {
 
   useEffect(() => {
     loadDashboardData();
-  }, []);
+  }, [loadDashboardData]);
 
   useEffect(() => {
     if (budgets.length > 0 && !isRefreshing) {
       loadDashboardData();
     }
-  }, [budgets.length]);
+  }, [budgets.length, isRefreshing, loadDashboardData]);
 
   const onRefresh = async () => {
     setIsRefreshing(true);
