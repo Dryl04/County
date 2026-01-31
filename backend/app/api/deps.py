@@ -1,6 +1,5 @@
 """API dependencies for authentication and authorization."""
 
-from typing import Optional
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
@@ -12,7 +11,6 @@ from app.db.session import get_db
 from app.models import User
 
 security = HTTPBearer()
-
 
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
@@ -69,7 +67,6 @@ def get_current_user(
         )
 
     return user
-
 
 def get_current_active_admin(current_user: User = Depends(get_current_user)) -> User:
     """Verify the current user is an admin."""
