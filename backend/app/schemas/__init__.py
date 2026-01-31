@@ -9,6 +9,8 @@ from app.schemas.transaction import (
     TransactionResponse,
     TransactionListResponse,
     TransactionType,
+    CategoryInfo,
+    BudgetInfo,
 )
 from app.schemas.auth import LoginRequest, TokenResponse, RefreshTokenRequest
 from app.schemas.error import ErrorResponse, ErrorBody, ErrorDetail, ErrorCodes
@@ -29,6 +31,8 @@ __all__ = [
     "TransactionResponse",
     "TransactionListResponse",
     "TransactionType",
+    "CategoryInfo",
+    "BudgetInfo",
     "LoginRequest",
     "TokenResponse",
     "RefreshTokenRequest",

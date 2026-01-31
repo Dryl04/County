@@ -4,10 +4,11 @@ from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from sqlalchemy.orm import Session, joinedload
 
 from app.api.deps import get_current_user
+from app.core.audit import create_audit_log, AuditActions
 from app.db.session import get_db
 from app.models import Budget, Category, Transaction, User
 from app.schemas import (
@@ -22,7 +23,11 @@ router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
 def verify_budget_ownership(budget_id: UUID, user_id: UUID, db: Session) -> Budget:
     """Verify that the user owns the budget."""
-    budget = db.query(Budget).filter(Budget.id == budget_id, Budget.user_id == user_id).first()
+    budget = db.query(Budget).filter(
+        Budget.id == budget_id,
+        Budget.user_id == user_id,
+        Budget.is_deleted == False
+    ).first()
     if not budget:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -73,9 +78,13 @@ def list_transactions(
     pages = (total + per_page - 1) // per_page if total > 0 else 1
     offset = (page - 1) * per_page
 
-    # Get paginated transactions
+    # Get paginated transactions with eager loading of relationships
     transactions = (
         db.query(Transaction)
+        .options(
+            joinedload(Transaction.budget),
+            joinedload(Transaction.category)
+        )
         .filter(Transaction.budget_id == budget_id)
         .order_by(Transaction.occurred_at.desc())
         .offset(offset)
@@ -95,6 +104,7 @@ def list_transactions(
 @router.post("", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED)
 def create_transaction(
     transaction_data: TransactionCreate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Transaction:
@@ -123,8 +133,34 @@ def create_transaction(
         else:  # expense
             budget.total_amount -= transaction_data.amount
     
+    # Create audit log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        action=AuditActions.CREATE_TRANSACTION,
+        resource_type="transaction",
+        resource_id=transaction.id,
+        payload={
+            "budget_id": str(transaction_data.budget_id),
+            "amount": str(transaction_data.amount),
+            "type": transaction_data.type.value,
+        },
+        request=request,
+    )
+    
     db.commit()
-    db.refresh(transaction)
+    
+    # Refresh and eager load relationships for response
+    transaction = (
+        db.query(Transaction)
+        .options(
+            joinedload(Transaction.budget),
+            joinedload(Transaction.category)
+        )
+        .filter(Transaction.id == transaction.id)
+        .first()
+    )
+    
     return transaction
 
 
@@ -135,7 +171,15 @@ def get_transaction(
     current_user: User = Depends(get_current_user),
 ) -> Transaction:
     """Get a specific transaction by ID."""
-    transaction = db.query(Transaction).filter(Transaction.id == transaction_id).first()
+    transaction = (
+        db.query(Transaction)
+        .options(
+            joinedload(Transaction.budget),
+            joinedload(Transaction.category)
+        )
+        .filter(Transaction.id == transaction_id)
+        .first()
+    )
     if not transaction:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -156,11 +200,20 @@ def get_transaction(
 def update_transaction(
     transaction_id: UUID,
     transaction_data: TransactionUpdate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Transaction:
     """Update a specific transaction."""
-    transaction = db.query(Transaction).filter(Transaction.id == transaction_id).first()
+    transaction = (
+        db.query(Transaction)
+        .options(
+            joinedload(Transaction.budget),
+            joinedload(Transaction.category)
+        )
+        .filter(Transaction.id == transaction_id)
+        .first()
+    )
     if not transaction:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -206,6 +259,19 @@ def update_transaction(
         else:  # expense
             budget.total_amount -= transaction.amount
 
+    # Create audit log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        action=AuditActions.UPDATE_TRANSACTION,
+        resource_type="transaction",
+        resource_id=transaction_id,
+        payload={
+            "updated_fields": transaction_data.model_dump(exclude_unset=True, mode="json"),
+        },
+        request=request,
+    )
+
     db.commit()
     db.refresh(transaction)
     return transaction
@@ -214,6 +280,7 @@ def update_transaction(
 @router.delete("/{transaction_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_transaction(
     transaction_id: UUID,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> None:
@@ -239,6 +306,24 @@ def delete_transaction(
             budget.total_amount -= transaction.amount
         else:  # expense
             budget.total_amount += transaction.amount
+
+    # Create audit log BEFORE deletion with transaction details
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        action=AuditActions.DELETE_TRANSACTION,
+        resource_type="transaction",
+        resource_id=transaction_id,
+        payload={
+            "budget_id": str(transaction.budget_id),
+            "category_id": str(transaction.category_id) if transaction.category_id else None,
+            "amount": str(transaction.amount),
+            "type": transaction.type,
+            "note": transaction.note,
+            "occurred_at": transaction.occurred_at.isoformat() if transaction.occurred_at else None,
+        },
+        request=request,
+    )
 
     db.delete(transaction)
     db.commit()

@@ -1,5 +1,6 @@
 """Tests for transaction endpoints."""
 
+from datetime import datetime, timedelta, timezone
 import pytest
 
 
@@ -35,6 +36,21 @@ class TestTransactionEndpoints:
         assert data["type"] == "expense"
         assert data["note"] == "Lunch"
 
+    def test_create_transaction_with_future_date_rejected(self, client, auth_headers, budget_id):
+        """Test that future dates are rejected for transactions."""
+        future_date = (datetime.now(timezone.utc) + timedelta(days=1)).isoformat()
+        response = client.post(
+            "/api/v1/transactions",
+            json={
+                "budget_id": budget_id,
+                "amount": "50.00",
+                "type": "expense",
+                "occurred_at": future_date,
+            },
+            headers=auth_headers,
+        )
+        assert response.status_code == 422
+
     def test_list_transactions_with_pagination(self, client, auth_headers, budget_id):
         """Test listing transactions with pagination."""
         # Create multiple transactions
@@ -63,6 +79,44 @@ class TestTransactionEndpoints:
         assert "pages" in data
         assert len(data["items"]) <= 2
         assert data["page"] == 1
+
+    def test_transaction_includes_budget_and_category_info(self, client, auth_headers, budget_id):
+        """Test that transaction response includes budget and category info."""
+        # Create a category
+        cat_response = client.post(
+            "/api/v1/categories",
+            json={"budget_id": budget_id, "name": "Food", "color": "#ff0000"},
+            headers=auth_headers,
+        )
+        category_id = cat_response.json()["id"]
+
+        # Create transaction with category
+        tx_response = client.post(
+            "/api/v1/transactions",
+            json={
+                "budget_id": budget_id,
+                "category_id": category_id,
+                "amount": "25.00",
+                "type": "expense",
+            },
+            headers=auth_headers,
+        )
+        assert tx_response.status_code == 201
+        tx_data = tx_response.json()
+
+        # Get transaction details
+        get_response = client.get(
+            f"/api/v1/transactions/{tx_data['id']}",
+            headers=auth_headers,
+        )
+        data = get_response.json()
+
+        # Verify budget and category info are included
+        assert "budget" in data
+        assert data["budget"]["name"] == "Test Budget"
+        assert "category" in data
+        assert data["category"]["name"] == "Food"
+        assert data["category"]["color"] == "#ff0000"
 
     def test_get_transaction(self, client, auth_headers, budget_id):
         """Test getting a specific transaction."""

@@ -55,7 +55,11 @@ def get_current_user(
             },
         )
 
-    user = db.query(User).filter(User.id == UUID(user_id)).first()
+    # Exclude soft-deleted users
+    user = db.query(User).filter(
+        User.id == UUID(user_id),
+        User.is_deleted == False
+    ).first()
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

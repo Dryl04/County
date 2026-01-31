@@ -93,6 +93,40 @@
             </div>
         </div>
 
+        <!-- GDPR Data Export Section -->
+        <div class="glass-card">
+            <h3 class="text-lg font-heading text-white mb-4">Data Privacy (GDPR)</h3>
+            <p class="text-neutral-400 text-sm mb-4">
+                Export all your data in JSON format including your profile, budgets, categories, transactions, and activity logs.
+            </p>
+            
+            <!-- Export Success Message -->
+            <div v-if="exportSuccess" class="p-4 bg-green-500/20 border border-green-500/30 rounded-lg mb-4">
+                <p class="text-green-400 text-sm">Data exported successfully!</p>
+            </div>
+            
+            <!-- Export Error Message -->
+            <div v-if="exportError" class="p-4 bg-red-500/20 border border-red-500/30 rounded-lg mb-4">
+                <p class="text-red-400 text-sm">{{ exportError }}</p>
+            </div>
+            
+            <button @click="handleExportData" :disabled="isExporting" class="btn-secondary">
+                <span class="flex items-center gap-2">
+                    <svg v-if="isExporting" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                    <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    {{ isExporting ? 'Exporting...' : 'Export My Data' }}
+                </span>
+            </button>
+        </div>
+
         <!-- Danger Zone -->
         <div class="glass-card border-red-500/30">
             <h3 class="text-lg font-heading text-red-400 mb-4">Danger Zone</h3>
@@ -145,8 +179,11 @@ const budgetStore = useBudgetStore()
 const showDeleteModal = ref(false)
 const isUpdating = ref(false)
 const isDeleting = ref(false)
+const isExporting = ref(false)
 const updateSuccess = ref(false)
 const updateError = ref('')
+const exportSuccess = ref(false)
+const exportError = ref('')
 
 const form = reactive({
     fullName: '',
@@ -162,6 +199,34 @@ const formatDate = (dateStr?: string) => {
         month: 'long',
         day: 'numeric'
     })
+}
+
+const handleExportData = async () => {
+    isExporting.value = true
+    exportSuccess.value = false
+    exportError.value = ''
+
+    try {
+        const data = await authService.exportData()
+        
+        // Download the data as JSON file
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `county_data_export_${authStore.user?.id || 'user'}.json`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+        
+        exportSuccess.value = true
+    } catch (e: unknown) {
+        const error = e as { response?: { data?: { detail?: string } } }
+        exportError.value = error.response?.data?.detail || 'Failed to export data'
+    } finally {
+        isExporting.value = false
+    }
 }
 
 const handleUpdate = async () => {
