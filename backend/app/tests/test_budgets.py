@@ -1,6 +1,5 @@
 """Tests for budget endpoints."""
 
-import pytest
 
 
 class TestBudgetEndpoints:
