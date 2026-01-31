@@ -1,6 +1,15 @@
 # County - Budget Management Application
 
-A secure REST API for personal budget management built with FastAPI, SQLAlchemy, and PostgreSQL.
+A secure REST API for personal budget management built with FastAPI, SQLAlchemy, and PostgreSQL, with a modern mobile application built with React Native and Expo.
+
+## 🏗️ Project Structure
+
+```
+County/
+├── backend/          # FastAPI REST API
+├── frontend/         # Vue.js web application
+└── mobile/           # React Native mobile application (Expo)
+```
 
 ## Features
 
@@ -15,18 +24,35 @@ A secure REST API for personal budget management built with FastAPI, SQLAlchemy,
 
 ## Tech Stack
 
-- **Backend**: FastAPI (Python 3.11+)
+### Backend
+- **Framework**: FastAPI (Python 3.11+)
 - **Database**: PostgreSQL 15
 - **ORM**: SQLAlchemy 2.0
 - **Migrations**: Alembic
 - **Authentication**: JWT (python-jose) + bcrypt
 - **Testing**: pytest
 
+### Frontend (Web)
+- **Framework**: Vue.js 3.5
+- **Build Tool**: Vite 7
+- **Styling**: TailwindCSS 4
+- **State**: Pinia 3
+- **Charts**: Chart.js / vue-chartjs
+
+### Mobile
+- **Framework**: React Native 0.81.5 with Expo SDK 54
+- **Language**: TypeScript 5.9
+- **Navigation**: React Navigation 7
+- **State Management**: Zustand 5
+- **HTTP Client**: Axios 1.12
+- **Secure Storage**: Expo Secure Store
+
 ## Quick Start
 
 ### Prerequisites
 
 - Python 3.11+
+- Node.js 20+ or 22+
 - PostgreSQL 15+
 - Docker & Docker Compose (optional)
 
@@ -45,6 +71,8 @@ docker-compose up -d
 ```
 
 ### Manual Setup
+
+#### Backend
 
 ```bash
 # Navigate to backend
@@ -67,6 +95,27 @@ alembic upgrade head
 # Start development server
 uvicorn app.main:app --reload
 ```
+
+#### Mobile Application
+
+```bash
+# Navigate to mobile directory
+cd mobile
+
+# Install dependencies
+npm install
+
+# Start the development server
+npm start
+
+# For iOS (macOS only)
+npm run ios
+
+# For Android
+npm run android
+```
+
+See [mobile/README.md](mobile/README.md) for detailed mobile app documentation.
 
 ## API Endpoints
 
