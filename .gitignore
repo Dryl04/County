@@ -78,3 +78,14 @@ docker-compose.override.yml
 
 # Test artifacts
 test.db
+
+# Node.js
+node_modules/
+
+# React Native / Expo
+mobile/.expo/
+mobile/dist/
+mobile/web-build/
+mobile/expo-env.d.ts
+mobile/.metro-health-check*
+*.tsbuildinfo
