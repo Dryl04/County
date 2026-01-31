@@ -35,7 +35,7 @@ services:
     volumes:
       - ./backend:/app
     command: >
-      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+      sh -c "python manage.py migrate && gunicorn --bind 0.0.0.0:8000 --reload county_project.wsgi:application"
 
 volumes:
   postgres_data:

@@ -1,6 +1,6 @@
 # County - Budget Management Application
 
-A secure REST API for personal budget management built with FastAPI, SQLAlchemy, and PostgreSQL.
+A secure REST API for personal budget management built with Django, Django REST Framework, and PostgreSQL.
 
 ## Features
 
@@ -10,17 +10,16 @@ A secure REST API for personal budget management built with FastAPI, SQLAlchemy,
 - **Categories**: Organize transactions with customizable categories
 - **Transactions**: Track income and expenses with pagination support
 - **Audit Logging**: Track sensitive actions for compliance
-- **Rate Limiting**: Protect API from abuse
 - **Docker Support**: Easy deployment with Docker Compose
 
 ## Tech Stack
 
-- **Backend**: FastAPI (Python 3.11+)
+- **Backend**: Django 5.1+ with Django REST Framework
 - **Database**: PostgreSQL 15
-- **ORM**: SQLAlchemy 2.0
-- **Migrations**: Alembic
-- **Authentication**: JWT (python-jose) + bcrypt
-- **Testing**: pytest
+- **ORM**: Django ORM
+- **Migrations**: Django Migrations
+- **Authentication**: JWT (djangorestframework-simplejwt)
+- **Testing**: pytest-django
 
 ## Quick Start
 
@@ -41,7 +40,6 @@ cd County
 docker-compose up -d
 
 # API will be available at http://localhost:8000
-# Docs at http://localhost:8000/docs
 ```
 
 ### Manual Setup
@@ -62,10 +60,10 @@ cp .env.example .env
 # Edit .env with your database credentials
 
 # Run migrations
-alembic upgrade head
+python manage.py migrate
 
 # Start development server
-uvicorn app.main:app --reload
+python manage.py runserver
 ```
 
 ## API Endpoints
@@ -123,10 +121,12 @@ All errors follow a standardized format:
 
 ```json
 {
-  "error": {
-    "code": "INVALID_INPUT",
-    "message": "Description of the error",
-    "details": { "field": "name", "issue": "too short" }
+  "detail": {
+    "error": {
+      "code": "INVALID_INPUT",
+      "message": "Description of the error",
+      "details": { "field": "name", "issue": "too short" }
+    }
   }
 }
 ```
@@ -147,7 +147,7 @@ All errors follow a standardized format:
 
 ```bash
 cd backend
-pytest app/tests -v
+pytest api/tests -v
 ```
 
 ## Security Notes
@@ -156,7 +156,7 @@ pytest app/tests -v
 - Use strong `JWT_SECRET_KEY` in production (generate with `openssl rand -hex 32`)
 - Enable HTTPS in production
 - Configure proper CORS origins
-- Passwords are hashed using bcrypt
+- Passwords are hashed using Django's built-in password hashing
 
 ## License
 
