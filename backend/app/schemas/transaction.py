@@ -16,6 +16,18 @@ class TransactionType(str, Enum):
     EXPENSE = "expense"
 
 
+def validate_not_future_date(v: Optional[datetime]) -> Optional[datetime]:
+    """Validate that a datetime is not in the future."""
+    if v is not None:
+        now = datetime.now(timezone.utc)
+        # Make sure v is timezone-aware for comparison
+        if v.tzinfo is None:
+            v = v.replace(tzinfo=timezone.utc)
+        if v > now:
+            raise ValueError('Transaction date cannot be in the future')
+    return v
+
+
 class TransactionBase(BaseModel):
     """Base transaction schema."""
 
@@ -29,14 +41,7 @@ class TransactionBase(BaseModel):
     @classmethod
     def validate_occurred_at(cls, v: Optional[datetime]) -> Optional[datetime]:
         """Validate that occurred_at is not in the future."""
-        if v is not None:
-            now = datetime.now(timezone.utc)
-            # Make sure v is timezone-aware for comparison
-            if v.tzinfo is None:
-                v = v.replace(tzinfo=timezone.utc)
-            if v > now:
-                raise ValueError('Transaction date cannot be in the future')
-        return v
+        return validate_not_future_date(v)
 
 
 class TransactionCreate(TransactionBase):
@@ -60,14 +65,7 @@ class TransactionUpdate(BaseModel):
     @classmethod
     def validate_occurred_at(cls, v: Optional[datetime]) -> Optional[datetime]:
         """Validate that occurred_at is not in the future."""
-        if v is not None:
-            now = datetime.now(timezone.utc)
-            # Make sure v is timezone-aware for comparison
-            if v.tzinfo is None:
-                v = v.replace(tzinfo=timezone.utc)
-            if v > now:
-                raise ValueError('Transaction date cannot be in the future')
-        return v
+        return validate_not_future_date(v)
 
 
 class CategoryInfo(BaseModel):

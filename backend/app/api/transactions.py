@@ -149,12 +149,17 @@ def create_transaction(
     )
     
     db.commit()
-    db.refresh(transaction)
     
-    # Eager load relationships for response
-    db.refresh(transaction)
-    _ = transaction.budget
-    _ = transaction.category
+    # Refresh and eager load relationships for response
+    transaction = (
+        db.query(Transaction)
+        .options(
+            joinedload(Transaction.budget),
+            joinedload(Transaction.category)
+        )
+        .filter(Transaction.id == transaction.id)
+        .first()
+    )
     
     return transaction
 
