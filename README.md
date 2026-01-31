@@ -1,50 +1,109 @@
 # County - Budget Management Application
 
-A secure REST API for personal budget management built with FastAPI, SQLAlchemy, and PostgreSQL.
+> A full-stack personal budget management application with a secure REST API backend and modern Vue.js frontend.
 
-## Features
+County helps you take control of your finances by providing an intuitive interface to track income, expenses, and manage multiple budgets. Built with modern technologies and security best practices.
 
-- **Authentication**: JWT-based authentication with access/refresh tokens
-- **User Management**: Registration, login, profile management
-- **Budgets**: Create and manage multiple budgets
-- **Categories**: Organize transactions with customizable categories
-- **Transactions**: Track income and expenses with pagination support
-- **Audit Logging**: Track sensitive actions for compliance
-- **Rate Limiting**: Protect API from abuse
-- **Docker Support**: Easy deployment with Docker Compose
+## ✨ Features
 
-## Tech Stack
+- **🔐 Authentication**: JWT-based authentication with access/refresh tokens
+- **👤 User Management**: Registration, login, and customizable profile settings
+- **💰 Multi-Budget Support**: Create and manage multiple budgets with different currencies
+- **📊 Categories**: Organize transactions with customizable categories
+- **💸 Transaction Tracking**: Track income and expenses with pagination and automatic balance calculation
+- **🌍 Multi-Currency Support**: Support for 8 major currencies (EUR, USD, GBP, XOF, CAD, CHF, JPY, CNY)
+- **📝 Audit Logging**: Track sensitive actions for compliance and security
+- **🛡️ Rate Limiting**: Built-in API protection against abuse
+- **🚀 Docker Support**: Easy deployment with Docker Compose
+- **📱 Modern UI**: Responsive Vue.js frontend with Tailwind CSS
 
-- **Backend**: FastAPI (Python 3.11+)
+## 🛠️ Tech Stack
+
+### Backend
+- **Framework**: FastAPI (Python 3.11+)
 - **Database**: PostgreSQL 15
 - **ORM**: SQLAlchemy 2.0
 - **Migrations**: Alembic
 - **Authentication**: JWT (python-jose) + bcrypt
 - **Testing**: pytest
 
-## Quick Start
+### Frontend
+- **Framework**: Vue.js 3 with TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS
+- **State Management**: Pinia
+- **Testing**: Vitest + Playwright
+
+### DevOps
+- **Containerization**: Docker & Docker Compose
+- **Database**: PostgreSQL 15 (Alpine)
+
+## 📁 Project Structure
+
+```
+County/
+├── backend/           # FastAPI backend application
+│   ├── alembic/      # Database migrations
+│   ├── app/          # Application code
+│   │   ├── api/      # API endpoints
+│   │   ├── core/     # Core configurations
+│   │   ├── db/       # Database setup
+│   │   ├── models/   # SQLAlchemy models
+│   │   ├── schemas/  # Pydantic schemas
+│   │   └── tests/    # Backend tests
+│   └── requirements.txt
+├── frontend/          # Vue.js frontend application
+│   ├── src/          # Source code
+│   ├── e2e/          # E2E tests
+│   └── package.json
+├── docker-compose.yml # Docker orchestration
+├── CHANGELOG.md      # Version history and updates
+└── README.md         # This file
+```
+
+## 🚀 Quick Start
 
 ### Prerequisites
 
 - Python 3.11+
-- PostgreSQL 15+
-- Docker & Docker Compose (optional)
+- Node.js 18+ and npm
+- PostgreSQL 15+ (if not using Docker)
+- Docker & Docker Compose (recommended)
 
 ### Using Docker (Recommended)
+
+The easiest way to get started is with Docker Compose, which sets up both the backend and database:
 
 ```bash
 # Clone the repository
 git clone https://github.com/Dryl04/County.git
 cd County
 
-# Start services
+# Start backend and database services
 docker-compose up -d
 
-# API will be available at http://localhost:8000
-# Docs at http://localhost:8000/docs
+# Backend API will be available at http://localhost:8000
+# API Documentation at http://localhost:8000/docs
 ```
 
-### Manual Setup
+### Frontend Setup
+
+The frontend needs to be run separately:
+
+```bash
+# Navigate to frontend directory
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Frontend will be available at http://localhost:5174
+```
+
+### Manual Backend Setup (Without Docker)
 
 ```bash
 # Navigate to backend
@@ -68,7 +127,16 @@ alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
-## API Endpoints
+### Access Points
+
+After setup, you can access:
+
+- **Frontend**: http://localhost:5174
+- **Backend API**: http://localhost:8000
+- **API Docs (Swagger)**: http://localhost:8000/docs
+- **Database**: localhost:5433 (Docker) or localhost:5432 (local)
+
+## 📡 API Endpoints
 
 ### Authentication
 
@@ -131,7 +199,7 @@ All errors follow a standardized format:
 }
 ```
 
-## Environment Variables
+## ⚙️ Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
@@ -143,21 +211,109 @@ All errors follow a standardized format:
 | `RATE_LIMIT_PER_MINUTE` | API rate limit | 300 |
 | `DEBUG` | Enable debug mode | false |
 
-## Running Tests
+## 🧪 Running Tests
+
+### Backend Tests
 
 ```bash
 cd backend
+
+# Run all tests with pytest
 pytest app/tests -v
+
+# Run with coverage
+pytest app/tests --cov=app --cov-report=html
 ```
 
-## Security Notes
+### Frontend Tests
+
+```bash
+cd frontend
+
+# Run unit tests
+npm run test:unit
+
+# Run E2E tests
+npx playwright install  # First time only
+npm run test:e2e
+
+# Run linting
+npm run lint
+```
+
+## 🔒 Security Notes
 
 - Never commit `.env` files with real secrets
 - Use strong `JWT_SECRET_KEY` in production (generate with `openssl rand -hex 32`)
 - Enable HTTPS in production
 - Configure proper CORS origins
-- Passwords are hashed using bcrypt
+- Passwords are hashed using bcrypt with salt rounds
+- Implement rate limiting on sensitive endpoints
+- Regular security audits recommended
 
-## License
+## 🐛 Troubleshooting
+
+### Database Connection Issues
+
+If you encounter database connection errors:
+
+```bash
+# Check if PostgreSQL is running
+docker-compose ps
+
+# View database logs
+docker-compose logs db
+
+# Restart database service
+docker-compose restart db
+```
+
+### Frontend Build Issues
+
+```bash
+# Clear npm cache
+npm cache clean --force
+
+# Remove node_modules and reinstall
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### Migration Issues
+
+```bash
+# Check current migration status
+cd backend
+alembic current
+
+# Rollback one migration
+alembic downgrade -1
+
+# Upgrade to latest
+alembic upgrade head
+```
+
+## 📝 Recent Updates
+
+Check the [CHANGELOG.md](CHANGELOG.md) for detailed information about recent features and improvements, including:
+
+- ✅ Automatic budget balance calculation
+- ✅ User-configurable preferred currency
+- ✅ Support for 8 major currencies
+- ✅ Improved transaction management
+
+## 🤝 Contributing
+
+Contributions are welcome! Here's how you can help:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+Please ensure your code follows the existing style and includes appropriate tests.
+
+## 📄 License
 
 MIT
