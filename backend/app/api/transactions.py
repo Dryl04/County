@@ -114,6 +114,15 @@ def create_transaction(
         occurred_at=transaction_data.occurred_at or datetime.now(timezone.utc),
     )
     db.add(transaction)
+    
+    # Update budget balance
+    budget = db.query(Budget).filter(Budget.id == transaction_data.budget_id).first()
+    if budget:
+        if transaction_data.type.value == "income":
+            budget.total_amount += transaction_data.amount
+        else:  # expense
+            budget.total_amount -= transaction_data.amount
+    
     db.commit()
     db.refresh(transaction)
     return transaction
@@ -165,6 +174,16 @@ def update_transaction(
 
     verify_budget_ownership(transaction.budget_id, current_user.id, db)
 
+    # Get budget for balance update
+    budget = db.query(Budget).filter(Budget.id == transaction.budget_id).first()
+    
+    # Revert old transaction from budget
+    if budget:
+        if transaction.type == "income":
+            budget.total_amount -= transaction.amount
+        else:  # expense
+            budget.total_amount += transaction.amount
+
     if transaction_data.category_id is not None:
         verify_category_ownership(transaction_data.category_id, current_user.id, db)
         transaction.category_id = transaction_data.category_id
@@ -179,6 +198,13 @@ def update_transaction(
         transaction.note = transaction_data.note
     if transaction_data.occurred_at is not None:
         transaction.occurred_at = transaction_data.occurred_at
+
+    # Apply new transaction to budget
+    if budget:
+        if transaction.type == "income":
+            budget.total_amount += transaction.amount
+        else:  # expense
+            budget.total_amount -= transaction.amount
 
     db.commit()
     db.refresh(transaction)
@@ -205,6 +231,14 @@ def delete_transaction(
         )
 
     verify_budget_ownership(transaction.budget_id, current_user.id, db)
+
+    # Update budget balance before deletion
+    budget = db.query(Budget).filter(Budget.id == transaction.budget_id).first()
+    if budget:
+        if transaction.type == "income":
+            budget.total_amount -= transaction.amount
+        else:  # expense
+            budget.total_amount += transaction.amount
 
     db.delete(transaction)
     db.commit()

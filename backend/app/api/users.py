@@ -49,6 +49,9 @@ def update_current_user(
     if user_data.password:
         current_user.hashed_password = get_password_hash(user_data.password)
 
+    if user_data.preferred_currency:
+        current_user.preferred_currency = user_data.preferred_currency
+
     db.commit()
     db.refresh(current_user)
 

@@ -12,6 +12,7 @@ class UserBase(BaseModel):
 
     email: EmailStr
     full_name: str = Field(..., min_length=1, max_length=255)
+    preferred_currency: str = Field(default="EUR", min_length=3, max_length=3)
 
 
 class UserCreate(UserBase):
@@ -26,6 +27,7 @@ class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
     full_name: Optional[str] = Field(None, min_length=1, max_length=255)
     password: Optional[str] = Field(None, min_length=8, max_length=100)
+    preferred_currency: Optional[str] = Field(None, min_length=3, max_length=3)
 
 
 class UserResponse(UserBase):
