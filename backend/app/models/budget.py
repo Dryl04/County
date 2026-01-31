@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
 
-from sqlalchemy import Column, String, DateTime, ForeignKey, Numeric
+from sqlalchemy import Column, String, DateTime, ForeignKey, Numeric, Boolean
 from sqlalchemy.orm import relationship
 
 from app.db.session import Base
@@ -24,6 +24,8 @@ class Budget(Base):
     description = Column(String(500), nullable=True)
     total_amount = Column(Numeric(15, 2), default=Decimal("0.00"), nullable=False)
     currency = Column(String(3), default="EUR", nullable=False)
+    is_deleted = Column(Boolean, default=False, nullable=False)
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),

@@ -23,7 +23,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register(user_data: UserCreate, db: Session = Depends(get_db)) -> User:
     """Register a new user."""
-    # Check if email already exists
+    # Check if email already exists (including soft-deleted for uniqueness)
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
         raise HTTPException(
@@ -54,7 +54,11 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)) -> User:
 @router.post("/login", response_model=TokenResponse)
 def login(login_data: LoginRequest, db: Session = Depends(get_db)) -> dict:
     """Authenticate user and return JWT tokens."""
-    user = db.query(User).filter(User.email == login_data.email).first()
+    # Exclude soft-deleted users from login
+    user = db.query(User).filter(
+        User.email == login_data.email,
+        User.is_deleted == False
+    ).first()
 
     if not user or not verify_password(login_data.password, user.hashed_password):
         raise HTTPException(
@@ -106,7 +110,11 @@ def refresh_token(token_data: RefreshTokenRequest, db: Session = Depends(get_db)
         )
 
     user_id = payload.get("sub")
-    user = db.query(User).filter(User.id == UUID(user_id)).first()
+    # Exclude soft-deleted users from refresh
+    user = db.query(User).filter(
+        User.id == UUID(user_id),
+        User.is_deleted == False
+    ).first()
 
     if not user:
         raise HTTPException(

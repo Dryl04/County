@@ -2,6 +2,18 @@ import api from './api'
 
 export type TransactionType = 'income' | 'expense'
 
+export interface CategoryInfo {
+  id: string
+  name: string
+  color: string
+}
+
+export interface BudgetInfo {
+  id: string
+  name: string
+  currency: string
+}
+
 export interface Transaction {
   id: string
   amount: string
@@ -11,6 +23,8 @@ export interface Transaction {
   occurred_at: string
   budget_id: string
   category_id?: string
+  budget?: BudgetInfo
+  category?: CategoryInfo
   created_at: string
   updated_at: string
 }

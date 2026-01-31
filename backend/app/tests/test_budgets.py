@@ -72,7 +72,7 @@ class TestBudgetEndpoints:
         assert response.json()["name"] == "Updated Name"
 
     def test_delete_budget(self, client, auth_headers):
-        """Test deleting a budget."""
+        """Test deleting a budget (soft delete)."""
         # Create a budget
         create_response = client.post(
             "/api/v1/budgets",
@@ -85,9 +85,32 @@ class TestBudgetEndpoints:
         response = client.delete(f"/api/v1/budgets/{budget_id}", headers=auth_headers)
         assert response.status_code == 204
 
-        # Verify it's deleted
+        # Verify it's not visible (soft deleted)
         get_response = client.get(f"/api/v1/budgets/{budget_id}", headers=auth_headers)
         assert get_response.status_code == 404
+
+    def test_restore_budget(self, client, auth_headers):
+        """Test restoring a soft-deleted budget."""
+        # Create and delete a budget
+        create_response = client.post(
+            "/api/v1/budgets",
+            json={"name": "To Restore"},
+            headers=auth_headers,
+        )
+        budget_id = create_response.json()["id"]
+        client.delete(f"/api/v1/budgets/{budget_id}", headers=auth_headers)
+
+        # Restore it
+        restore_response = client.post(
+            f"/api/v1/budgets/{budget_id}/restore",
+            headers=auth_headers,
+        )
+        assert restore_response.status_code == 200
+        assert restore_response.json()["name"] == "To Restore"
+
+        # Verify it's visible again
+        get_response = client.get(f"/api/v1/budgets/{budget_id}", headers=auth_headers)
+        assert get_response.status_code == 200
 
     def test_budget_not_found(self, client, auth_headers):
         """Test getting a nonexistent budget."""
@@ -101,3 +124,15 @@ class TestBudgetEndpoints:
         """Test accessing budgets without authentication."""
         response = client.get("/api/v1/budgets")
         assert response.status_code == 403
+
+    def test_negative_budget_rejected(self, client, auth_headers):
+        """Test that negative budget amounts are rejected."""
+        response = client.post(
+            "/api/v1/budgets",
+            json={
+                "name": "Negative Budget",
+                "total_amount": "-100.00",
+            },
+            headers=auth_headers,
+        )
+        assert response.status_code == 422

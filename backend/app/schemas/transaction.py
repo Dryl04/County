@@ -1,12 +1,12 @@
 """Pydantic schemas for Transaction model."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class TransactionType(str, Enum):
@@ -24,6 +24,19 @@ class TransactionBase(BaseModel):
     type: TransactionType
     note: Optional[str] = Field(None, max_length=500)
     occurred_at: Optional[datetime] = None
+
+    @field_validator('occurred_at')
+    @classmethod
+    def validate_occurred_at(cls, v: Optional[datetime]) -> Optional[datetime]:
+        """Validate that occurred_at is not in the future."""
+        if v is not None:
+            now = datetime.now(timezone.utc)
+            # Make sure v is timezone-aware for comparison
+            if v.tzinfo is None:
+                v = v.replace(tzinfo=timezone.utc)
+            if v > now:
+                raise ValueError('Transaction date cannot be in the future')
+        return v
 
 
 class TransactionCreate(TransactionBase):
@@ -43,6 +56,39 @@ class TransactionUpdate(BaseModel):
     note: Optional[str] = Field(None, max_length=500)
     occurred_at: Optional[datetime] = None
 
+    @field_validator('occurred_at')
+    @classmethod
+    def validate_occurred_at(cls, v: Optional[datetime]) -> Optional[datetime]:
+        """Validate that occurred_at is not in the future."""
+        if v is not None:
+            now = datetime.now(timezone.utc)
+            # Make sure v is timezone-aware for comparison
+            if v.tzinfo is None:
+                v = v.replace(tzinfo=timezone.utc)
+            if v > now:
+                raise ValueError('Transaction date cannot be in the future')
+        return v
+
+
+class CategoryInfo(BaseModel):
+    """Nested schema for category information in transaction response."""
+    
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: UUID
+    name: str
+    color: str
+
+
+class BudgetInfo(BaseModel):
+    """Nested schema for budget information in transaction response."""
+    
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: UUID
+    name: str
+    currency: str
+
 
 class TransactionResponse(TransactionBase):
     """Schema for transaction response."""
@@ -52,6 +98,8 @@ class TransactionResponse(TransactionBase):
     id: UUID
     budget_id: UUID
     category_id: Optional[UUID]
+    budget: Optional[BudgetInfo] = None
+    category: Optional[CategoryInfo] = None
     created_at: datetime
     updated_at: datetime
 

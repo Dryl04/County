@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, String, DateTime, ForeignKey
+from sqlalchemy import Column, String, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from app.db.session import Base
@@ -38,6 +38,11 @@ class Category(Base):
     budget = relationship("Budget", back_populates="categories")
     transactions = relationship(
         "Transaction", back_populates="category", cascade="all, delete-orphan"
+    )
+
+    # Unique constraint for category name within a budget
+    __table_args__ = (
+        UniqueConstraint('budget_id', 'name', name='uq_category_budget_name'),
     )
 
     def __repr__(self) -> str:

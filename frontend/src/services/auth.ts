@@ -26,6 +26,15 @@ export interface User {
   created_at: string
 }
 
+export interface UserDataExport {
+  export_date: string
+  user: Record<string, unknown>
+  budgets: Record<string, unknown>[]
+  categories: Record<string, unknown>[]
+  transactions: Record<string, unknown>[]
+  audit_logs: Record<string, unknown>[]
+}
+
 export const authService = {
   async login(data: LoginRequest): Promise<TokenResponse> {
     const response = await api.post('/auth/login', data)
@@ -54,6 +63,11 @@ export const authService = {
 
   async deleteAccount(): Promise<void> {
     await api.delete('/users/me')
+  },
+
+  async exportData(): Promise<UserDataExport> {
+    const response = await api.get('/users/me/export')
+    return response.data
   },
 
   logout(): void {
