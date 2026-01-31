@@ -5,7 +5,6 @@ Never commit actual secrets to the repository.
 """
 
 from functools import lru_cache
-from typing import Optional
 
 from pydantic_settings import BaseSettings
 

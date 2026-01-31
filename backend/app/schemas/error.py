@@ -1,6 +1,6 @@
 """Pydantic schemas for standardized error responses."""
 
-from typing import Any, Optional
+from typing import Optional
 
 from pydantic import BaseModel
 
