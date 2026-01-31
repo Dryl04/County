@@ -1,7 +1,5 @@
 """User API routes."""
 
-from uuid import UUID
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -13,12 +11,10 @@ from app.schemas import UserResponse, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
-
 @router.get("/me", response_model=UserResponse)
 def get_current_user_profile(current_user: User = Depends(get_current_user)) -> User:
     """Get current user's profile."""
     return current_user
-
 
 @router.put("/me", response_model=UserResponse)
 def update_current_user(
@@ -56,7 +52,6 @@ def update_current_user(
     db.refresh(current_user)
 
     return current_user
-
 
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
 def delete_current_user(
